@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Naija Feud</title>
+<style>
+:root{
+  --green:#0A7A3D;
+  --green-dk:#065C2C;
+  --ivory:#F7F3E8;
+  --ink:#1B1B1B;
+  --gold:#D4A017;
+  --gold-lt:#F0C64B;
+  --red:#C1432E;
+  --panel:#FFFFFF;
+  --shadow: 0 6px 18px rgba(0,0,0,.18);
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{
+  margin:0;
+  font-family:-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:var(--ivory);
+  color:var(--ink);
+  overflow-x:hidden;
+  min-height:100vh;
+}
+.display{
+  font-family:"Arial Black","Segoe UI Black",Arial,sans-serif;
+  text-transform:uppercase;
+  letter-spacing:.03em;
+}
+.stripe-band{
+  height:14px;
+  width:100%;
+  background:repeating-linear-gradient(
+    -45deg,
+    var(--green) 0px, var(--green) 18px,
+    var(--gold) 18px, var(--gold) 24px,
+    var(--green-dk) 24px, var(--green-dk) 42px,
+    var(--gold) 42px, var(--gold) 48px
+  );
+  flex-shrink:0;
+}
+.screen{
+  display:none;
+  min-height:100vh;
+  flex-direction:column;
+}
+.screen.active{display:flex;}
+.container{
+  max-width:720px;
+  margin:0 auto;
+  width:100%;
+  padding:20px 18px 40px;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+}
+/* ---------- Header / wordmark ---------- */
+.wordmark{
+  text-align:center;
+  padding:22px 0 10px;
+}
+.wordmark h1{
+  margin:0;
+  font-size:clamp(34px,9vw,54px);
+  color:var(--green-dk);
+  line-height:.95;
+}
+.wordmark h1 span{color:var(--gold);}
+.wordmark p{
+  margin:6px 0 0;
+  font-size:13px;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:var(--ink);
+  opacity:.55;
+  font-weight:600;
+}
+/* ---------- Buttons ---------- */
+.btn{
+  display:block;
+  width:100%;
+  border:none;
+  border-radius:14px;
+  padding:16px 20px;
+  font-size:17px;
+  font-weight:800;
+  letter-spacing:.02em;
+  cursor:pointer;
+  text-align:center;
+  box-shadow:var(--shadow);
+  transition:transform .08s ease;
+  font-family:inherit;
+}
+.btn:active{transform:scale(.97);}
+.btn-primary{background:var(--green); color:#fff;}
+.btn-gold{background:var(--gold); color:var(--ink);}
+.btn-outline{background:#fff; color:var(--green-dk); border:2px solid var(--green);}
+.btn-red{background:var(--red); color:#fff;}
+.btn-ghost{background:transparent; color:var(--ink); box-shadow:none; text-decoration:underline; opacity:.65; font-weight:600;}
+.btn-sm{padding:10px 14px; font-size:13px; border-radius:10px;}
+.btn:disabled{opacity:.4; cursor:not-allowed; transform:none;}
+.btn-row{display:flex; gap:10px;}
+.btn-row .btn{flex:1;}
+.stack{display:flex; flex-direction:column; gap:12px;}
+/* ---------- Cards ---------- */
+.card{
+  background:var(--panel);
+  border-radius:16px;
+  padding:18px;
+  box-shadow:var(--shadow);
+}
+.eyebrow{
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:var(--green-dk);
+  opacity:.7;
+  margin:0 0 6px;
+}
+label.field-label{
+  display:block;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--ink);
+  opacity:.6;
+  margin:0 0 6px;
+}
+input[type=text], textarea{
+  width:100%;
+  border:2px solid #e4ded0;
+  border-radius:10px;
+  padding:12px 14px;
+  font-size:16px;
+  font-family:inherit;
+  background:#fff;
+  color:var(--ink);
+}
+input[type=text]:focus, textarea:focus{outline:none; border-color:var(--green);}
+textarea{resize:vertical; min-height:90px; font-family:monospace; font-size:12px;}
+/* ---------- Board ---------- */
+.board-wrap{
+  background:var(--green-dk);
+  border-radius:18px;
+  padding:14px;
+  box-shadow:var(--shadow);
+  position:relative;
+  overflow:hidden;
+}
+.board-wrap::before{
+  content:"";
+  position:absolute; inset:0;
+  background:repeating-linear-gradient(-45deg, rgba(212,160,23,.07) 0 10px, transparent 10px 20px);
+  pointer-events:none;
+}
+.question-text{
+  color:#fff;
+  font-size:17px;
+  font-weight:700;
+  text-align:center;
+  padding:6px 10px 14px;
+  line-height:1.35;
+  position:relative;
+}
+.slots{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  position:relative;
+}
+.slot{
+  background:var(--green);
+  border-radius:10px;
+  height:52px;
+  display:flex;
+  align-items:center;
+  padding:0 16px;
+  position:relative;
+  perspective:800px;
+  cursor:pointer;
+  border:2px solid rgba(255,255,255,.15);
+}
+.slot-inner{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  transition:transform .5s;
+  transform-style:preserve-3d;
+}
+.slot.revealed .slot-inner{transform:rotateX(360deg);}
+.slot-num{
+  width:26px; height:26px;
+  border-radius:50%;
+  background:var(--gold);
+  color:var(--ink);
+  font-weight:800;
+  font-size:13px;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.slot-text{
+  flex:1;
+  color:#fff;
+  font-weight:800;
+  font-size:15px;
+  text-transform:uppercase;
+  letter-spacing:.02em;
+  padding:0 10px;
+  opacity:0;
+}
+.slot.revealed .slot-text{opacity:1;}
+.slot.hidden .slot-text{opacity:0;}
+.slot-points{
+  background:var(--gold);
+  color:var(--ink);
+  font-weight:800;
+  font-size:14px;
+  padding:4px 10px;
+  border-radius:6px;
+  min-width:38px;
+  text-align:center;
+  opacity:0;
+}
+.slot.revealed .slot-points{opacity:1;}
+.slot-placeholder{
+  flex:1;
+  text-align:center;
+  color:rgba(255,255,255,.35);
+  font-size:20px;
+  letter-spacing:.3em;
+}
+.slot.revealed .slot-placeholder{display:none;}
+/* strikes */
+.strikes{
+  display:flex;
+  justify-content:center;
+  gap:14px;
+  margin-top:16px;
+  position:relative;
+}
+.strike-x{
+  width:44px; height:44px;
+  opacity:.18;
+  transition:opacity .2s, transform .2s;
+}
+.strike-x.active{opacity:1; animation:pop .35s ease;}
+@keyframes pop{0%{transform:scale(.4) rotate(-15deg);} 60%{transform:scale(1.15) rotate(5deg);} 100%{transform:scale(1) rotate(0);}}
+/* ---------- Scoreboard ---------- */
+.scoreboard{
+  display:flex;
+  gap:10px;
+  margin:14px 0;
+}
+.score-card{
+  flex:1;
+  background:#fff;
+  border-radius:14px;
+  padding:12px 10px;
+  text-align:center;
+  box-shadow:var(--shadow);
+  border-bottom:5px solid var(--green);
+  position:relative;
+}
+.score-card.leading{border-bottom-color:var(--gold);}
+.score-card .team-name{
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  opacity:.6;
+  margin-bottom:2px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.score-card .team-score{
+  font-size:30px;
+  font-weight:900;
+  color:var(--green-dk);
+  font-family:"Arial Black","Segoe UI Black",Arial,sans-serif;
+}
+.score-card.active-control{outline:3px solid var(--gold);}
+/* ---------- misc ---------- */
+.pill{
+  display:inline-block;
+  background:var(--gold);
+  color:var(--ink);
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  padding:4px 10px;
+  border-radius:999px;
+}
+.center-text{text-align:center;}
+.muted{opacity:.6; font-size:13px;}
+.top-bar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:14px;
+}
+.top-bar .qcount{font-size:13px; font-weight:700; opacity:.6;}
+.back-link{
+  background:none; border:none; color:var(--green-dk);
+  font-weight:800; font-size:14px; cursor:pointer; padding:6px 0;
+}
+.status-banner{
+  text-align:center;
+  padding:10px 14px;
+  border-radius:10px;
+  font-weight:800;
+  font-size:14px;
+  margin-bottom:12px;
+  background:#fff3d6;
+  color:#8a6a00;
+  border:1px solid #f0d580;
+}
+.status-banner.win{background:#e2f5e9; color:var(--green-dk); border-color:#b7e3c8;}
+.status-banner.danger{background:#fbe3de; color:var(--red); border-color:#f0c0b6;}
+.guess-row{display:flex; gap:8px; margin-top:10px;}
+.guess-row input{flex:1;}
+.code-box{
+  font-family:monospace;
+  font-size:12px;
+  word-break:break-all;
+  background:#f2ede0;
+  border-radius:10px;
+  padding:12px;
+  border:2px dashed #d8cfb4;
+  max-height:120px;
+  overflow-y:auto;
+}
+.divider{
+  display:flex; align-items:center; gap:10px;
+  margin:18px 0;
+  opacity:.4;
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+}
+.divider::before, .divider::after{content:""; flex:1; height:1px; background:currentColor;}
+.spinner{
+  width:34px; height:34px;
+  border:4px solid #e4ded0;
+  border-top-color:var(--green);
+  border-radius:50%;
+  animation:spin 1s linear infinite;
+  margin:0 auto;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+.confetti-wrap{position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:50;}
+.confetti-piece{
+  position:absolute; top:-20px;
+  width:9px; height:14px;
+  animation:fall linear forwards;
+}
+@keyframes fall{to{transform:translateY(110vh) rotate(540deg); opacity:.9;}}
+@media (prefers-reduced-motion: reduce){
+  .strike-x.active{animation:none;}
+  .slot.revealed .slot-inner{transition:none;}
+  .confetti-piece{animation:none; display:none;}
+}
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script id="data-blob" type="application/json">[{"q": "Name something people take to work.", "a": [{"t": "Lunch", "p": 30}, {"t": "Phone", "p": 25}, {"t": "Laptop", "p": 20}, {"t": "Water", "p": 15}, {"t": "Bag", "p": 10}]}, {"q": "Name something people put in their bag before leaving the house.", "a": [{"t": "Powerbank", "p": 32}, {"t": "Wallet", "p": 25}, {"t": "Keys", "p": 22}, {"t": "Handkerchief", "p": 12}, {"t": "Pen", "p": 9}]}, {"q": "Name something people buy from a roadside vendor (\"Mai Shayi\") on their way to work.", "a": [{"t": "Tea/Koko", "p": 35}, {"t": "Bread", "p": 25}, {"t": "Egg", "p": 20}, {"t": "Indomie", "p": 15}, {"t": "Groundnut", "p": 5}]}, {"q": "Name a common excuse people give for being late to work in Lagos.", "a": [{"t": "Traffic/Hold-up", "p": 45}, {"t": "Okada ban", "p": 20}, {"t": "Rain", "p": 15}, {"t": "Vehicle breakdown", "p": 12}, {"t": "Woke up late", "p": 8}]}, {"q": "Name something you use your phone for while stuck in traffic.", "a": [{"t": "Social media", "p": 30}, {"t": "Calls", "p": 25}, {"t": "Music", "p": 20}, {"t": "News", "p": 15}, {"t": "Navigation", "p": 10}]}, {"q": "Name a major bus stop/area that Danfo conductors shout in Lagos.", "a": [{"t": "Oshodi!", "p": 35}, {"t": "Mile 2!", "p": 25}, {"t": "CMS!", "p": 20}, {"t": "Yaba!", "p": 12}, {"t": "Mile 12!", "p": 8}]}, {"q": "Name a snack people sneak into the cinema or office.", "a": [{"t": "Gala", "p": 40}, {"t": "Groundnut", "p": 25}, {"t": "Biscuit", "p": 20}, {"t": "Puff-puff", "p": 10}, {"t": "Coke", "p": 5}]}, {"q": "Name something people do immediately they enter the office.", "a": [{"t": "Greet colleagues", "p": 30}, {"t": "Make tea/coffee", "p": 25}, {"t": "Check phone", "p": 20}, {"t": "Turn on AC", "p": 15}, {"t": "Pray", "p": 10}]}, {"q": "Name a typical \"Nigerian breakfast\" before work.", "a": [{"t": "Bread & Tea", "p": 35}, {"t": "Akara & Pap", "p": 25}, {"t": "Oats", "p": 20}, {"t": "Yam", "p": 15}, {"t": "Beans", "p": 5}]}, {"q": "Name something people carry in their car boot.", "a": [{"t": "Tyre/jack", "p": 30}, {"t": "Generator", "p": 25}, {"t": "Water", "p": 20}, {"t": "Suitcase", "p": 15}, {"t": "Cables", "p": 10}]}, {"q": "Name a reason a Nigerian mother would shout at her child.", "a": [{"t": "Not eating", "p": 30}, {"t": "Bad grades", "p": 25}, {"t": "Coming home late", "p": 20}, {"t": "Breaking plates", "p": 15}, {"t": "Fighting sibling", "p": 10}]}, {"q": "Name something people ask their \"village people\" to stop doing.", "a": [{"t": "Causing delay", "p": 35}, {"t": "Causing sickness", "p": 25}, {"t": "Stealing luck", "p": 20}, {"t": "Making them spend", "p": 15}, {"t": "Giving bad dreams", "p": 5}]}, {"q": "Name a dish served at a Nigerian wedding.", "a": [{"t": "Jollof rice", "p": 40}, {"t": "Fried rice", "p": 25}, {"t": "Pounded yam", "p": 15}, {"t": "Pepper soup", "p": 10}, {"t": "Moi moi", "p": 10}]}, {"q": "Name something a groom must do before entering the wedding venue.", "a": [{"t": "Pay the dowry", "p": 35}, {"t": "Dance", "p": 25}, {"t": "Kneel down", "p": 20}, {"t": "Spray money", "p": 15}, {"t": "Greet parents", "p": 5}]}, {"q": "Name a question your \"Aunty\" asks you at a family gathering.", "a": [{"t": "When are you getting married?", "p": 40}, {"t": "Where do you work?", "p": 25}, {"t": "Are you eating well?", "p": 20}, {"t": "Why are you thin?", "p": 10}, {"t": "How much is your rent?", "p": 5}]}, {"q": "Name something people fight over in a Nigerian polygamous home.", "a": [{"t": "Land", "p": 30}, {"t": "Husband's attention", "p": 25}, {"t": "Food", "p": 20}, {"t": "Money", "p": 15}, {"t": "Children", "p": 10}]}, {"q": "Name a gift people give to a new baby in Nigeria.", "a": [{"t": "Pampers", "p": 35}, {"t": "Clothes", "p": 25}, {"t": "Cash", "p": 20}, {"t": "Baby wipes", "p": 15}, {"t": "Gold", "p": 5}]}, {"q": "Name a typical \"Nigerian parent\" warning before you travel.", "a": [{"t": "Don't eat anything", "p": 30}, {"t": "Call me when you get there", "p": 25}, {"t": "Don't trust anyone", "p": 20}, {"t": "Don't go out at night", "p": 15}, {"t": "Where is my share?", "p": 10}]}, {"q": "Name a person who usually sprays the most money at a party.", "a": [{"t": "The politician", "p": 35}, {"t": "The rich uncle", "p": 25}, {"t": "The groom", "p": 20}, {"t": "The best man", "p": 15}, {"t": "The DJ", "p": 5}]}, {"q": "Name something a child says to their mother after school.", "a": [{"t": "I'm hungry", "p": 35}, {"t": "Can I play?", "p": 25}, {"t": "I have homework", "p": 20}, {"t": "I got a prize", "p": 15}, {"t": "I want money", "p": 5}]}, {"q": "Name a Nollywood actor known for playing the \"bad guy\" role.", "a": [{"t": "Pete Edochie", "p": 35}, {"t": "Kanayo O. Kanayo", "p": 25}, {"t": "Jim Iyke", "p": 20}, {"t": "Chiwetalu Agu", "p": 15}, {"t": "Zubby Michael", "p": 5}]}, {"q": "Name a musician whose song is played at every Nigerian party.", "a": [{"t": "Burna Boy", "p": 30}, {"t": "Davido", "p": 25}, {"t": "Wizkid", "p": 20}, {"t": "Flavour", "p": 15}, {"t": "Kizz Daniel", "p": 10}]}, {"q": "Name a movie genre that Nigerians love the most.", "a": [{"t": "Comedy", "p": 35}, {"t": "Drama", "p": 25}, {"t": "Action", "p": 20}, {"t": "Romance", "p": 15}, {"t": "Epic/History", "p": 5}]}, {"q": "Name something that happens in every Nollywood movie.", "a": [{"t": "The pastor prays", "p": 30}, {"t": "A mother cries", "p": 25}, {"t": "A rich man dies", "p": 20}, {"t": "Twins separated", "p": 15}, {"t": "I have a secret", "p": 10}]}, {"q": "Name a foreign celebrity that Nigerians love.", "a": [{"t": "Beyonce", "p": 30}, {"t": "Rihanna", "p": 25}, {"t": "Donald Trump", "p": 20}, {"t": "The Rock", "p": 15}, {"t": "Jesus", "p": 10}]}, {"q": "Name a song that gets everyone on the dance floor.", "a": [{"t": "Jerusalema", "p": 30}, {"t": "Ojuelegba", "p": 25}, {"t": "Skelewu", "p": 20}, {"t": "Koroba", "p": 15}, {"t": "Zanku", "p": 10}]}, {"q": "Name a social media app Nigerians spend the most time on.", "a": [{"t": "WhatsApp", "p": 35}, {"t": "Instagram", "p": 25}, {"t": "TikTok", "p": 20}, {"t": "Twitter/X", "p": 15}, {"t": "Facebook", "p": 5}]}, {"q": "Name a person Nigerians love to see interviewed.", "a": [{"t": "Funke Akindele", "p": 30}, {"t": "Don Jazzy", "p": 25}, {"t": "Bobrisky", "p": 20}, {"t": "Toke Makinwa", "p": 15}, {"t": "Daddy Freeze", "p": 10}]}, {"q": "Name a reality TV show Nigerians are obsessed with.", "a": [{"t": "BBNaija", "p": 50}, {"t": "The Real Housewives", "p": 20}, {"t": "Nigerian Idol", "p": 15}, {"t": "Gulder Ultimate Search", "p": 10}, {"t": "MTV Cribs", "p": 5}]}, {"q": "Name a phrase in a song that goes viral in Nigeria.", "a": [{"t": "Abobi", "p": 30}, {"t": "Kpokpo", "p": 25}, {"t": "Gbera", "p": 20}, {"t": "Sho mo", "p": 15}, {"t": "Odogwu", "p": 10}]}, {"q": "Name something Nigerians save money to buy.", "a": [{"t": "Generator", "p": 30}, {"t": "Car", "p": 25}, {"t": "Land", "p": 20}, {"t": "Fridge", "p": 15}, {"t": "Wedding", "p": 10}]}, {"q": "Name a business a Nigerian starts with small capital.", "a": [{"t": "Selling provisions", "p": 30}, {"t": "Hawking food", "p": 25}, {"t": "POS agent", "p": 20}, {"t": "Phone accessories", "p": 15}, {"t": "Barbing salon", "p": 10}]}, {"q": "Name a \"scam\" people fall for in Nigeria.", "a": [{"t": "You won a lottery", "p": 30}, {"t": "Fake job offer", "p": 25}, {"t": "419 email", "p": 20}, {"t": "Romance scam", "p": 15}, {"t": "Fake products", "p": 10}]}, {"q": "Name a common expense in a Nigerian home.", "a": [{"t": "Food", "p": 35}, {"t": "Electricity/Prepaid", "p": 25}, {"t": "School fees", "p": 20}, {"t": "Transport", "p": 15}, {"t": "Data/Airtime", "p": 5}]}, {"q": "Name a thing people borrow from their neighbor.", "a": [{"t": "Salt", "p": 30}, {"t": "Sugar", "p": 25}, {"t": "Money", "p": 20}, {"t": "Cooker", "p": 15}, {"t": "Onion", "p": 10}]}, {"q": "Name something people bargain/haggle for in the market.", "a": [{"t": "Clothes", "p": 30}, {"t": "Car", "p": 25}, {"t": "Foodstuffs", "p": 20}, {"t": "Shoes", "p": 15}, {"t": "Generator", "p": 10}]}, {"q": "Name a reason Nigerians change their mobile network provider.", "a": [{"t": "Cheaper data", "p": 30}, {"t": "Better coverage", "p": 25}, {"t": "Free bonuses", "p": 20}, {"t": "To talk to a lover", "p": 15}, {"t": "To use 5G", "p": 10}]}, {"q": "Name a method people use to send money home to their village.", "a": [{"t": "Bank transfer", "p": 35}, {"t": "POS", "p": 25}, {"t": "Mobile app (Opay/PalmPay)", "p": 20}, {"t": "Recharge card", "p": 15}, {"t": "Through a bus driver", "p": 5}]}, {"q": "Name a thing that is more expensive during \"Sallah\" or \"Christmas\".", "a": [{"t": "Meat/Ram", "p": 35}, {"t": "Transport", "p": 25}, {"t": "Clothes", "p": 20}, {"t": "Rice", "p": 15}, {"t": "Drinks", "p": 5}]}, {"q": "Name something people \"turn off\" to save electricity.", "a": [{"t": "Air conditioner", "p": 30}, {"t": "Fridge", "p": 25}, {"t": "Television", "p": 20}, {"t": "Water heater", "p": 15}, {"t": "Lights", "p": 10}]}, {"q": "Name a place where Nigerian couples go on a date.", "a": [{"t": "Cinema", "p": 30}, {"t": "Restaurant", "p": 25}, {"t": "Beach", "p": 20}, {"t": "Mall", "p": 15}, {"t": "Night club", "p": 10}]}, {"q": "Name a reason a Nigerian girlfriend gets angry with her boyfriend.", "a": [{"t": "Forgetting birthday", "p": 30}, {"t": "Not picking calls", "p": 25}, {"t": "Cheating", "p": 20}, {"t": "No money", "p": 15}, {"t": "Talking to another girl", "p": 10}]}, {"q": "Name something a Nigerian man says to impress a woman.", "a": [{"t": "You are beautiful", "p": 30}, {"t": "I will marry you", "p": 25}, {"t": "I have a car", "p": 20}, {"t": "I work at a bank", "p": 15}, {"t": "My father is rich", "p": 10}]}, {"q": "Name a condition parents give before accepting a suitor.", "a": [{"t": "Must have a job", "p": 35}, {"t": "Must pay dowry", "p": 25}, {"t": "Must be from a good family", "p": 20}, {"t": "Must own a house", "p": 15}, {"t": "Must be Christian", "p": 5}]}, {"q": "Name something a couple fights about after marriage.", "a": [{"t": "Money", "p": 35}, {"t": "In-laws", "p": 25}, {"t": "House chores", "p": 20}, {"t": "Child upbringing", "p": 15}, {"t": "Time spent with friends", "p": 5}]}, {"q": "Name a gift a man gives to his wife on her birthday.", "a": [{"t": "Gold/Jewelry", "p": 30}, {"t": "Perfume", "p": 25}, {"t": "Handbag", "p": 20}, {"t": "Car", "p": 15}, {"t": "Cash", "p": 10}]}, {"q": "Name a question a mother asks her daughter's boyfriend.", "a": [{"t": "What do you do for a living?", "p": 35}, {"t": "Where are you from?", "p": 25}, {"t": "Are you serious?", "p": 20}, {"t": "Can you take care of her?", "p": 15}, {"t": "Do you have a car?", "p": 5}]}, {"q": "Name something people do at a Nigerian engagement ceremony.", "a": [{"t": "Kneel down", "p": 30}, {"t": "Eat", "p": 25}, {"t": "Dance", "p": 20}, {"t": "Spray money", "p": 15}, {"t": "Pray", "p": 10}]}, {"q": "Name a reason a Nigerian woman says \"I'm not hungry\" even when she is.", "a": [{"t": "She's shy", "p": 30}, {"t": "She's on a diet", "p": 25}, {"t": "She wants him to insist", "p": 20}, {"t": "She's saving face", "p": 15}, {"t": "She's angry", "p": 10}]}, {"q": "Name a place a Nigerian man takes his girlfriend for \"romance.\"", "a": [{"t": "Hotel", "p": 35}, {"t": "Beach", "p": 25}, {"t": "His car", "p": 20}, {"t": "Restaurant", "p": 15}, {"t": "Her house", "p": 5}]}, {"q": "Name something a student does when the lecturer leaves the class.", "a": [{"t": "Gist/Chit-chat", "p": 35}, {"t": "Sleep", "p": 25}, {"t": "Eat", "p": 20}, {"t": "Check phone", "p": 15}, {"t": "Copy notes", "p": 5}]}, {"q": "Name a common course Nigerian students hate.", "a": [{"t": "Mathematics", "p": 40}, {"t": "Physics", "p": 25}, {"t": "Statistics", "p": 20}, {"t": "Accounting", "p": 10}, {"t": "Chemistry", "p": 5}]}, {"q": "Name something a student carries to school every day.", "a": [{"t": "Bag", "p": 35}, {"t": "Notebook", "p": 25}, {"t": "Laptop", "p": 20}, {"t": "Calculator", "p": 15}, {"t": "Water bottle", "p": 5}]}, {"q": "Name an excuse students give for not doing their assignment.", "a": [{"t": "My dog ate it", "p": 30}, {"t": "No electricity", "p": 25}, {"t": "I was sick", "p": 20}, {"t": "I lost my book", "p": 15}, {"t": "The lecturer didn't teach it", "p": 10}]}, {"q": "Name something students do during \"ASUU strike.\"", "a": [{"t": "Sleep", "p": 30}, {"t": "Watch movies", "p": 25}, {"t": "Learn a skill", "p": 20}, {"t": "Travel home", "p": 15}, {"t": "Date", "p": 10}]}, {"q": "Name a place students go to read/study.", "a": [{"t": "Library", "p": 35}, {"t": "Hostel", "p": 25}, {"t": "Cafe", "p": 20}, {"t": "Under a tree", "p": 15}, {"t": "Chapel/Church", "p": 5}]}, {"q": "Name something a Nigerian parent says to a student who brings a bad result.", "a": [{"t": "Who is this?", "p": 30}, {"t": "You are useless", "p": 25}, {"t": "Is this what I paid for?", "p": 20}, {"t": "Go and pray", "p": 15}, {"t": "I will beat you", "p": 10}]}, {"q": "Name a person students fear the most on campus.", "a": [{"t": "The Dean", "p": 35}, {"t": "The Security guard", "p": 25}, {"t": "A senior student", "p": 20}, {"t": "The lecturer", "p": 15}, {"t": "The cleaner", "p": 5}]}, {"q": "Name a type of food Nigerian students eat when they are broke.", "a": [{"t": "Indomie", "p": 40}, {"t": "Bread", "p": 25}, {"t": "Garri", "p": 20}, {"t": "Beans", "p": 10}, {"t": "Eba", "p": 5}]}, {"q": "Name a thing a student does to make extra money on campus.", "a": [{"t": "Sell recharge cards", "p": 30}, {"t": "Run a POS", "p": 25}, {"t": "Tutor others", "p": 20}, {"t": "Hawking", "p": 15}, {"t": "Photography", "p": 10}]}, {"q": "Name something a Nigerian pastor says in every sermon.", "a": [{"t": "Give offering", "p": 35}, {"t": "Pray", "p": 25}, {"t": "God is good", "p": 20}, {"t": "Tithe", "p": 15}, {"t": "Repent", "p": 5}]}, {"q": "Name a type of prayer Nigerians say the most.", "a": [{"t": "Protection prayer", "p": 30}, {"t": "Money prayer", "p": 25}, {"t": "Marriage prayer", "p": 20}, {"t": "Healing prayer", "p": 15}, {"t": "Breakthrough prayer", "p": 10}]}, {"q": "Name something people wear to church on Sunday.", "a": [{"t": "Ankara", "p": 30}, {"t": "Suit", "p": 25}, {"t": "Lace", "p": 20}, {"t": "T-shirt", "p": 15}, {"t": "Jeans", "p": 10}]}, {"q": "Name a church with a very large congregation in Nigeria.", "a": [{"t": "RCCG", "p": 35}, {"t": "Winners Chapel", "p": 25}, {"t": "Redeemed Church", "p": 20}, {"t": "Mountain of Fire", "p": 15}, {"t": "Deeper Life", "p": 5}]}, {"q": "Name something a Nigerian does on Sunday morning before church.", "a": [{"t": "Sleep in", "p": 30}, {"t": "Cook", "p": 25}, {"t": "Bath", "p": 20}, {"t": "Iron clothes", "p": 15}, {"t": "Watch TV", "p": 10}]}, {"q": "Name a reason a Nigerian goes to the \"prophet.\"", "a": [{"t": "Money issues", "p": 30}, {"t": "Marriage problems", "p": 25}, {"t": "Health issues", "p": 20}, {"t": "Spiritual attack", "p": 15}, {"t": "Career advice", "p": 10}]}, {"q": "Name something people shout in a Nigerian church.", "a": [{"t": "Amen!", "p": 40}, {"t": "Hallelujah!", "p": 25}, {"t": "Fire!", "p": 20}, {"t": "Holy Ghost!", "p": 10}, {"t": "Glory!", "p": 5}]}, {"q": "Name an item a Nigerian uses for \"spiritual warfare.\"", "a": [{"t": "Anointing oil", "p": 35}, {"t": "Bible", "p": 25}, {"t": "Prayer book", "p": 20}, {"t": "Candle", "p": 15}, {"t": "Holy water", "p": 5}]}, {"q": "Name a time Nigerians pray the most.", "a": [{"t": "Midnight", "p": 30}, {"t": "Before eating", "p": 25}, {"t": "Morning", "p": 20}, {"t": "Before traveling", "p": 15}, {"t": "When sick", "p": 10}]}, {"q": "Name a Nigerian Christian denomination known for \"fasting.\"", "a": [{"t": "Mountain of Fire", "p": 35}, {"t": "Deeper Life", "p": 25}, {"t": "Winners", "p": 20}, {"t": "RCCG", "p": 15}, {"t": "The Lord's Chosen", "p": 5}]}, {"q": "Name a common sickness in Nigeria.", "a": [{"t": "Malaria", "p": 40}, {"t": "Typhoid", "p": 25}, {"t": "Fever", "p": 20}, {"t": "Headache", "p": 10}, {"t": "Coronavirus", "p": 5}]}, {"q": "Name something Nigerians do when they have malaria.", "a": [{"t": "Go to pharmacy", "p": 30}, {"t": "Self-medicate", "p": 25}, {"t": "Drink herbal tea", "p": 20}, {"t": "Go to hospital", "p": 15}, {"t": "Sleep", "p": 10}]}, {"q": "Name a \"native\" remedy Nigerians use for sickness.", "a": [{"t": "Bitter leaf", "p": 30}, {"t": "Garlic/Ginger", "p": 25}, {"t": "Lemon", "p": 20}, {"t": "Neem", "p": 15}, {"t": "Aloe vera", "p": 10}]}, {"q": "Name a person Nigerians see when they are sick.", "a": [{"t": "Pharmacist", "p": 30}, {"t": "Doctor", "p": 25}, {"t": "Nurse", "p": 20}, {"t": "Herbalist", "p": 15}, {"t": "Prophet", "p": 10}]}, {"q": "Name a disease Nigerians are most afraid of.", "a": [{"t": "HIV/AIDS", "p": 35}, {"t": "Cancer", "p": 25}, {"t": "Stroke", "p": 20}, {"t": "Ebola", "p": 15}, {"t": "COVID-19", "p": 5}]}, {"q": "Name something a Nigerian mother gives a child with fever.", "a": [{"t": "Paracetamol", "p": 35}, {"t": "Sponge bath", "p": 25}, {"t": "Herbal tea", "p": 20}, {"t": "Soup", "p": 15}, {"t": "Water", "p": 5}]}, {"q": "Name a reason Nigerians don't go to the hospital.", "a": [{"t": "No money", "p": 40}, {"t": "Long queue", "p": 25}, {"t": "Bad doctors", "p": 20}, {"t": "Distance", "p": 10}, {"t": "Fear of injection", "p": 5}]}, {"q": "Name a thing a Nigerian says when they are in pain.", "a": [{"t": "Ah!", "p": 35}, {"t": "God help me", "p": 25}, {"t": "Chai!", "p": 20}, {"t": "Jesus!", "p": 15}, {"t": "Mummy!", "p": 5}]}, {"q": "Name a supplement Nigerians take for \"energy.\"", "a": [{"t": "Vitamin C", "p": 30}, {"t": "B-complex", "p": 25}, {"t": "Coffee", "p": 20}, {"t": "Agbo (herbal mix)", "p": 15}, {"t": "Maltina", "p": 10}]}, {"q": "Name a body part Nigerians complain about the most.", "a": [{"t": "Head", "p": 35}, {"t": "Stomach", "p": 25}, {"t": "Back", "p": 20}, {"t": "Leg", "p": 15}, {"t": "Waist", "p": 5}]}, {"q": "Name a football team Nigerians support the most.", "a": [{"t": "Super Eagles", "p": 40}, {"t": "Manchester United", "p": 25}, {"t": "Chelsea", "p": 20}, {"t": "Arsenal", "p": 10}, {"t": "Real Madrid", "p": 5}]}, {"q": "Name a thing Nigerians do when the Super Eagles score.", "a": [{"t": "Shout", "p": 35}, {"t": "Run outside", "p": 25}, {"t": "Honk horn", "p": 20}, {"t": "Jump", "p": 15}, {"t": "Cry", "p": 5}]}, {"q": "Name a Nigerian footballer known internationally.", "a": [{"t": "Victor Osimhen", "p": 30}, {"t": "Asisat Oshoala", "p": 25}, {"t": "William Troost-Ekong", "p": 20}, {"t": "Wilfred Ndidi", "p": 15}, {"t": "Kelechi Iheanacho", "p": 10}]}, {"q": "Name a phrase a Nigerian football commentator shouts.", "a": [{"t": "Goal!", "p": 40}, {"t": "Corner!", "p": 25}, {"t": "Foul!", "p": 20}, {"t": "Offside!", "p": 10}, {"t": "Penalty!", "p": 5}]}, {"q": "Name something Nigerians wear to watch a football match.", "a": [{"t": "Jersey", "p": 35}, {"t": "Cap", "p": 25}, {"t": "Scarf", "p": 20}, {"t": "Face paint", "p": 15}, {"t": "Flip-flops", "p": 5}]}, {"q": "Name a place Nigerians gather to watch an important match.", "a": [{"t": "Viewing centre", "p": 40}, {"t": "Pub", "p": 25}, {"t": "Living room", "p": 20}, {"t": "Neighbor's house", "p": 10}, {"t": "Stadium", "p": 5}]}, {"q": "Name a country Nigeria usually beats in football.", "a": [{"t": "Ghana", "p": 35}, {"t": "Cameroon", "p": 25}, {"t": "South Africa", "p": 20}, {"t": "Benin", "p": 15}, {"t": "Egypt", "p": 5}]}, {"q": "Name a thing a Nigerian man does when his team loses.", "a": [{"t": "Gets angry", "p": 35}, {"t": "Switches off TV", "p": 25}, {"t": "Goes to sleep", "p": 20}, {"t": "Breaks something", "p": 15}, {"t": "Blames referee", "p": 5}]}, {"q": "Name a sport other than football that Nigerians love.", "a": [{"t": "Basketball", "p": 35}, {"t": "Athletics", "p": 25}, {"t": "Boxing", "p": 20}, {"t": "Taekwondo", "p": 15}, {"t": "Table tennis", "p": 5}]}, {"q": "Name an award a Nigerian footballer has won.", "a": [{"t": "African Player of the Year", "p": 35}, {"t": "Golden Boot", "p": 25}, {"t": "Man of the Match", "p": 20}, {"t": "Olympic medal", "p": 15}, {"t": "Premier League trophy", "p": 5}]}, {"q": "Name a type of meat Nigerians fight over at a party.", "a": [{"t": "Chicken", "p": 35}, {"t": "Beef", "p": 25}, {"t": "Goat meat", "p": 20}, {"t": "Shaki (tripe)", "p": 15}, {"t": "Pork", "p": 5}]}, {"q": "Name a drink Nigerians serve at a party.", "a": [{"t": "Chapman", "p": 30}, {"t": "Zobo", "p": 25}, {"t": "Malt", "p": 20}, {"t": "Coke", "p": 15}, {"t": "Fanta", "p": 10}]}, {"q": "Name a thing a Nigerian does when they see a police checkpoint.", "a": [{"t": "Slow down", "p": 35}, {"t": "Hide phone", "p": 25}, {"t": "Lower their sunglasses", "p": 20}, {"t": "Check seatbelt", "p": 15}, {"t": "Turn around", "p": 5}]}, {"q": "Name a item a Nigerian \"Area Boy\" (street thug) demands for.", "a": [{"t": "Money", "p": 40}, {"t": "Phone", "p": 25}, {"t": "Cigarette", "p": 20}, {"t": "Food", "p": 10}, {"t": "Drink", "p": 5}]}, {"q": "Name a word Nigerians use to express surprise.", "a": [{"t": "Chai!", "p": 35}, {"t": "Gbam!", "p": 25}, {"t": "Oh!", "p": 20}, {"t": "Kai!", "p": 15}, {"t": "Jesus!", "p": 5}]}, {"q": "Name a thing people take to the village from the city.", "a": [{"t": "Rice", "p": 30}, {"t": "Clothes", "p": 25}, {"t": "Cartons of noodles", "p": 20}, {"t": "Aunty's money", "p": 15}, {"t": "Generator", "p": 10}]}, {"q": "Name something a Nigerian does when \"lights out\" happens.", "a": [{"t": "Shouts", "p": 35}, {"t": "Brings out candle", "p": 25}, {"t": "Turns on generator", "p": 20}, {"t": "Uses phone torch", "p": 15}, {"t": "Goes outside", "p": 5}]}, {"q": "Name a place Nigerians love to \"gist\" (gossip).", "a": [{"t": "Salon", "p": 30}, {"t": "Barbershop", "p": 25}, {"t": "Corridor", "p": 20}, {"t": "Bus stop", "p": 15}, {"t": "Market", "p": 10}]}, {"q": "Name a thing a Nigerian bride carries in her hand during the ceremony.", "a": [{"t": "Handkerchief", "p": 35}, {"t": "Flowers", "p": 25}, {"t": "Purse", "p": 20}, {"t": "Bible", "p": 15}, {"t": "Mirror", "p": 5}]}, {"q": "Name a last word Nigerians say before eating.", "a": [{"t": "Pray", "p": 30}, {"t": "Bon appétit", "p": 25}, {"t": "Oya chop", "p": 20}, {"t": "Thank God", "p": 15}, {"t": "Salt?", "p": 10}]}]</script>
+<script>
+/* ============================================================
+   NAIJA FEUD — game engine
+   ============================================================ */
+const QUESTIONS = JSON.parse(document.getElementById('data-blob').textContent);
+window.QUESTIONS = QUESTIONS;
+
+/* ---------------- fuzzy answer matching ---------------- */
+function normalize(s){
+  return s.toLowerCase()
+    .replace(/&/g,' and ')
+    .replace(/["'“”‘’]/g,'')
+    .replace(/[\/,()!?.]/g,' ')
+    .replace(/[^a-z0-9\s]/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+function levRatio(a,b){
+  if(a===b) return 1;
+  const al=a.length, bl=b.length;
+  if(al===0||bl===0) return 0;
+  const dp=Array(al+1).fill(0).map(()=>Array(bl+1).fill(0));
+  for(let i=0;i<=al;i++) dp[i][0]=i;
+  for(let j=0;j<=bl;j++) dp[0][j]=j;
+  for(let i=1;i<=al;i++){
+    for(let j=1;j<=bl;j++){
+      const cost = a[i-1]===b[j-1] ? 0 : 1;
+      dp[i][j]=Math.min(dp[i-1][j]+1, dp[i][j-1]+1, dp[i-1][j-1]+cost);
+    }
+  }
+  const dist=dp[al][bl];
+  return 1 - dist/Math.max(al,bl);
+}
+function isMatch(guess, answerText){
+  const ng = normalize(guess), na = normalize(answerText);
+  if(!ng) return false;
+  if(ng===na) return true;
+  if(ng.length>=3 && na.includes(ng)) return true;
+  if(na.length>=3 && ng.includes(na)) return true;
+  const tokensA = na.split(' ').filter(t=>t.length>=3);
+  const tokensG = ng.split(' ').filter(t=>t.length>=3);
+  for(const ta of tokensA){
+    for(const tg of tokensG){
+      if(levRatio(ta,tg) > 0.78) return true;
+    }
+  }
+  if(levRatio(ng,na) > 0.62) return true;
+  return false;
+}
+function findMatchIndex(guess, answers, revealed){
+  for(let i=0;i<answers.length;i++){
+    if(revealed[i]) continue;
+    if(isMatch(guess, answers[i].t)) return i;
+  }
+  return -1;
+}
+
+/* ---------------- shuffle / picking questions ---------------- */
+function shuffled(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+function pickQuestionIndices(count){
+  const all = QUESTIONS.map((_,i)=>i);
+  if(count>=all.length) return shuffled(all);
+  return shuffled(all).slice(0,count);
+}
+
+/* ---------------- confetti ---------------- */
+function fireConfetti(){
+  if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const wrap = document.createElement('div');
+  wrap.className='confetti-wrap';
+  document.body.appendChild(wrap);
+  const colors=['#0A7A3D','#D4A017','#F0C64B','#C1432E','#ffffff'];
+  for(let i=0;i<70;i++){
+    const p=document.createElement('div');
+    p.className='confetti-piece';
+    p.style.left = Math.random()*100+'vw';
+    p.style.background = colors[Math.floor(Math.random()*colors.length)];
+    p.style.animationDuration = (2.2+Math.random()*1.6)+'s';
+    p.style.animationDelay = (Math.random()*0.6)+'s';
+    p.style.transform = `rotate(${Math.random()*360}deg)`;
+    wrap.appendChild(p);
+  }
+  setTimeout(()=>wrap.remove(), 4200);
+}
+
+/* ---------------- app state / router ---------------- */
+const app = document.getElementById('app');
+let state = { screen:'home' };
+
+function go(screen, data){
+  // NOTE: explicit `screen` arg must always win, even if `data` (often the
+  // previous state object) itself carries a stale `screen` field.
+  state = Object.assign({}, data||{}, {screen});
+  window.state = state;
+  render();
+}
+window.state = state;
+function render(){
+  window.scrollTo(0,0);
+  app.innerHTML = SCREENS[state.screen](state);
+}
+
+
+/* ============================================================
+   HOME SCREEN
+   ============================================================ */
+function homeScreen(){
+  return `
+  <div class="screen active">
+    <div class="stripe-band"></div>
+    <div class="container">
+      <div class="wordmark">
+        <h1>Naija <span>Feud</span></h1>
+        <p>100 Survey Questions &middot; Top Answers on the Board</p>
+      </div>
+      <div class="stack" style="margin-top:18px;">
+        <div class="card">
+          <p class="eyebrow">Play together, one device</p>
+          <p style="margin:0 0 12px; font-size:14px; opacity:.75;">One person hosts, two teams call out answers. Perfect for a family gathering.</p>
+          <button class="btn btn-primary" data-act="go" data-to="localSetup">Local Party Mode</button>
+        </div>
+        <div class="card">
+          <p class="eyebrow">Play remotely, two phones</p>
+          <p style="margin:0 0 12px; font-size:14px; opacity:.75;">Connect two phones directly with a one-time code — no app store, no server. Buzz in and guess head-to-head.</p>
+          <button class="btn btn-gold" data-act="go" data-to="onlineSetup">Online 2-Player Mode</button>
+        </div>
+      </div>
+      <p class="muted center-text" style="margin-top:20px;">${QUESTIONS.length} questions across 10 rounds &mdash; morning commute to weddings to football.</p>
+    </div>
+  </div>`;
+}
+
+/* ============================================================
+   LOCAL MODE — setup
+   ============================================================ */
+function localSetupScreen(s){
+  const teamA = s.teamA ?? 'Team A';
+  const teamB = s.teamB ?? 'Team B';
+  const count = s.count ?? 20;
+  return `
+  <div class="screen active">
+    <div class="stripe-band"></div>
+    <div class="container">
+      <button class="back-link" data-act="go" data-to="home">&larr; Back</button>
+      <div class="wordmark" style="padding-top:6px;">
+        <h1 style="font-size:28px;">Set Up The Board</h1>
+      </div>
+      <div class="card stack">
+        <div>
+          <label class="field-label">Team A Name</label>
+          <input type="text" id="teamAInput" value="${escapeAttr(teamA)}" maxlength="20">
+        </div>
+        <div>
+          <label class="field-label">Team B Name</label>
+          <input type="text" id="teamBInput" value="${escapeAttr(teamB)}" maxlength="20">
+        </div>
+        <div>
+          <label class="field-label">Number of Questions</label>
+          <div class="btn-row">
+            ${[10,20,30,QUESTIONS.length].map(n=>`
+              <button class="btn ${count===n?'btn-primary':'btn-outline'} btn-sm" data-act="setLocalCount" data-n="${n}">${n===QUESTIONS.length?'All 100':n}</button>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-primary" style="margin-top:16px;" data-act="startLocal">Start Game</button>
+      <p class="muted center-text" style="margin-top:14px;">As host, you'll tap which team buzzed in, reveal answers as they're called out, and mark strikes.</p>
+    </div>
+  </div>`;
+}
+function setLocalCount(n){
+  const a = document.getElementById('teamAInput'), b = document.getElementById('teamBInput');
+  const next = Object.assign({}, state, {count:n});
+  if(a) next.teamA = a.value;
+  if(b) next.teamB = b.value;
+  go('localSetup', next);
+}
+function startLocal(){
+  const teamA = document.getElementById('teamAInput').value.trim() || 'Team A';
+  const teamB = document.getElementById('teamBInput').value.trim() || 'Team B';
+  const count = state.count ?? 20;
+  const order = pickQuestionIndices(count);
+  go('localGame', {
+    teamA, teamB, order, qi:0,
+    scores:{A:0,B:0},
+    revealed:[false,false,false,false,false],
+    strikes:0,
+    control:null,
+    phase:'faceoff' // faceoff -> guessing -> steal -> resolved
+  });
+}
+
+/* ============================================================
+   LOCAL MODE — game screen
+   ============================================================ */
+function localGameScreen(s){
+  const qObj = QUESTIONS[s.order[s.qi]];
+  const leading = s.scores.A===s.scores.B ? '' : (s.scores.A>s.scores.B?'A':'B');
+  let banner = '';
+  if(s.phase==='faceoff'){
+    banner = `<div class="status-banner">Who buzzed in first?</div>`;
+  } else if(s.phase==='guessing'){
+    const teamName = s.control==='A'?s.teamA:s.teamB;
+    banner = `<div class="status-banner">${escapeHtml(teamName)} is guessing</div>`;
+  } else if(s.phase==='steal'){
+    const stealer = s.control==='A'?s.teamB:s.teamA;
+    banner = `<div class="status-banner danger">Steal chance: ${escapeHtml(stealer)}</div>`;
+  } else if(s.phase==='resolved'){
+    banner = `<div class="status-banner win">Question complete</div>`;
+  }
+
+  return `
+  <div class="screen active">
+    <div class="stripe-band"></div>
+    <div class="container">
+      <div class="top-bar">
+        <button class="back-link" data-act="confirmExitLocal">&larr; End Game</button>
+        <span class="qcount">Q ${s.qi+1} / ${s.order.length}</span>
+      </div>
+
+      <div class="scoreboard">
+        <div class="score-card ${leading==='A'?'leading':''} ${s.control==='A'&&s.phase==='guessing'?'active-control':''}">
+          <div class="team-name">${escapeHtml(s.teamA)}</div>
+          <div class="team-score">${s.scores.A}</div>
+        </div>
+        <div class="score-card ${leading==='B'?'leading':''} ${s.control==='B'&&s.phase==='guessing'?'active-control':''}">
+          <div class="team-name">${escapeHtml(s.teamB)}</div>
+          <div class="team-score">${s.scores.B}</div>
+        </div>
+      </div>
+
+      ${banner}
+
+      <div class="board-wrap">
+        <div class="question-text">${escapeHtml(qObj.q)}</div>
+        <div class="slots">
+          ${qObj.a.map((ans,i)=>`
+            <div class="slot ${s.revealed[i]?'revealed':'hidden'}" data-act="revealSlot" data-i="${i}">
+              <div class="slot-inner">
+                <div class="slot-num">${i+1}</div>
+                <div class="slot-text">${escapeHtml(ans.t)}</div>
+                <div class="slot-placeholder">?</div>
+                <div class="slot-points">${ans.p}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        <div class="strikes">
+          ${[0,1,2].map(i=>`<svg class="strike-x ${s.strikes>i?'active':''}" viewBox="0 0 44 44"><path d="M8 8 L36 36 M36 8 L8 36" stroke="#C1432E" stroke-width="7" stroke-linecap="round" fill="none"/></svg>`).join('')}
+        </div>
+      </div>
+
+      <div class="stack" style="margin-top:16px;">
+        ${localControls(s)}
+      </div>
+    </div>
+  </div>`;
+}
+
+function localControls(s){
+  if(s.phase==='faceoff'){
+    return `<div class="btn-row">
+      <button class="btn btn-primary" data-act="assignControl" data-team="A">${escapeHtml(s.teamA)} Buzzed</button>
+      <button class="btn btn-primary" data-act="assignControl" data-team="B">${escapeHtml(s.teamB)} Buzzed</button>
+    </div>`;
+  }
+  if(s.phase==='guessing'){
+    return `<p class="muted center-text">Tap the correct slot to reveal it, or mark a strike for a wrong guess.</p>
+      <button class="btn btn-red" data-act="markStrike">Wrong Guess (Strike)</button>`;
+  }
+  if(s.phase==='steal'){
+    return `<p class="muted center-text">Tap the slot they guess, or mark it a failed steal.</p>
+      <button class="btn btn-outline" data-act="stealFail">Steal Failed</button>`;
+  }
+  if(s.phase==='resolved'){
+    const isLast = s.qi >= s.order.length-1;
+    return `<button class="btn btn-gold" data-act="nextLocalQuestion">${isLast?'See Final Score':'Next Question'}</button>`;
+  }
+  return '';
+}
+
+function assignControl(team){
+  go('localGame', Object.assign({}, state, {control:team, phase:'guessing'}));
+}
+function revealSlot(i){
+  const s = state;
+  if(s.phase!=='guessing' && s.phase!=='steal') return;
+  if(s.revealed[i]) return;
+  const revealed = s.revealed.slice();
+  revealed[i]=true;
+  const qObj = QUESTIONS[s.order[s.qi]];
+  const pts = qObj.a[i].p;
+  const scores = Object.assign({}, s.scores);
+
+  if(s.phase==='steal'){
+    // stealer gets ALL remaining unrevealed points (including this one)
+    const stealer = s.control==='A' ? 'B' : 'A';
+    let total = 0;
+    qObj.a.forEach((a,idx)=>{ if(!s.revealed[idx]) total += a.p; });
+    scores[stealer] += total;
+    const allRevealed = revealed.map(()=>true);
+    go('localGame', Object.assign({}, s, {revealed:allRevealed, scores, phase:'resolved'}));
+    return;
+  }
+  // normal guessing reveal
+  scores[s.control] += pts;
+  const allDone = revealed.every(Boolean);
+  go('localGame', Object.assign({}, s, {revealed, scores, phase: allDone?'resolved':'guessing'}));
+}
+function markStrike(){
+  const s = state;
+  const strikes = s.strikes+1;
+  if(strikes>=3){
+    go('localGame', Object.assign({}, s, {strikes, phase:'steal'}));
+  } else {
+    go('localGame', Object.assign({}, s, {strikes}));
+  }
+}
+function stealFail(){
+  go('localGame', Object.assign({}, state, {phase:'resolved'}));
+}
+function nextLocalQuestion(){
+  const s = state;
+  if(s.qi >= s.order.length-1){
+    go('localEnd', s);
+    return;
+  }
+  go('localGame', Object.assign({}, s, {
+    qi:s.qi+1, revealed:[false,false,false,false,false], strikes:0, control:null, phase:'faceoff'
+  }));
+}
+function confirmExitLocal(){
+  if(confirm('End this game and return to the menu?')) go('home');
+}
+
+/* ============================================================
+   LOCAL MODE — end screen
+   ============================================================ */
+function localEndScreen(s){
+  const winner = s.scores.A===s.scores.B ? null : (s.scores.A>s.scores.B?s.teamA:s.teamB);
+  setTimeout(fireConfetti, 100);
+  return `
+  <div class="screen active">
+    <div class="stripe-band"></div>
+    <div class="container center-text">
+      <div class="wordmark">
+        <h1 style="font-size:30px;">Game Over</h1>
+      </div>
+      <div class="card" style="margin-top:10px;">
+        ${winner ? `<p class="pill" style="margin-bottom:10px;">Winner</p><h2 class="display" style="margin:0 0 16px; color:var(--green-dk);">${escapeHtml(winner)}</h2>` : `<h2 class="display" style="margin:0 0 16px;">It's a Tie!</h2>`}
+        <div class="scoreboard">
+          <div class="score-card ${s.scores.A>=s.scores.B?'leading':''}">
+            <div class="team-name">${escapeHtml(s.teamA)}</div>
+            <div class="team-score">${s.scores.A}</div>
+          </div>
+          <div class="score-card ${s.scores.B>=s.scores.A?'leading':''}">
+            <div class="team-name">${escapeHtml(s.teamB)}</div>
+            <div class="team-score">${s.scores.B}</div>
+          </div>
+        </div>
+      </div>
+      <div class="stack" style="margin-top:20px;">
+        <button class="btn btn-primary" data-act="go" data-to="localSetup">Play Again</button>
+        <button class="btn btn-ghost" data-act="go" data-to="home">Main Menu</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ---------------- html escape helpers ---------------- */
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function escapeAttr(str){ return escapeHtml(str); }
+
+
+/* ============================================================
+   ONLINE MODE — WebRTC peer-to-peer (manual code exchange)
+   ============================================================ */
+let pc = null, dc = null;
+let net = { role:null, myName:'', peerName:'', status:'idle', errorMsg:'', myCode:'', busy:false };
+let og  = null; // online game state, created on connect
+window.net = net;
+window.og = og;
+
+const ICE_SERVERS = [
+  { urls:'stun:stun.l.google.com:19302' },
+  { urls:'stun:stun1.l.google.com:19302' }
+];
+
+function flip(who){ return who==='me' ? 'peer' : 'me'; }
+
+function waitIceComplete(peerConn, timeoutMs=8000){
+  return new Promise(resolve=>{
+    if(peerConn.iceGatheringState==='complete'){ resolve(); return; }
+    let done=false;
+    const finish=()=>{ if(!done){ done=true; peerConn.removeEventListener('icegatheringstatechange',finish); resolve(); } };
+    peerConn.addEventListener('icegatheringstatechange',finish);
+    setTimeout(finish, timeoutMs);
+  });
+}
+function encodeCode(desc){
+  const json = JSON.stringify({type:desc.type, sdp:desc.sdp});
+  return btoa(unescape(encodeURIComponent(json)));
+}
+function decodeCode(code){
+  const json = decodeURIComponent(escape(atob(code.trim())));
+  return JSON.parse(json);
+}
+function sendMsg(obj){
+  if(dc && dc.readyState==='open') dc.send(JSON.stringify(obj));
+}
+function newPC(){
+  const p = new RTCPeerConnection({iceServers:ICE_SERVERS});
+  p.oniceconnectionstatechange = ()=>{
+    if(['failed','disconnected','closed'].includes(p.iceConnectionState)){
+      if(state.screen==='onlineGame' || state.screen==='onlineHostCode' || state.screen==='onlineJoinCode'){
+        net.status='lost';
+        render();
+      }
+    }
+  };
+  return p;
+}
+function setupDataChannelHandlers(){
+  dc.onopen = ()=>{
+    net.status='connected';
+    if(net.role==='host'){
+      const order = pickQuestionIndices(net.count);
+      og = { role:'host', myName:net.myName, peerName:'', order, count:net.count, qi:-1,
+             scores:{me:0,peer:0}, revealed:[false,false,false,false,false], strikes:0,
+             phase:'lobby', control:null, buzzState:'idle', myBuzzTs:null, peerBuzzTs:null, lastResult:null };
+      window.og = og;
+      sendMsg({t:'hello', name:net.myName, count:net.count, order});
+    } else {
+      og = { role:'joiner', myName:net.myName, peerName:'', order:[], count:0, qi:-1,
+             scores:{me:0,peer:0}, revealed:[false,false,false,false,false], strikes:0,
+             phase:'lobby', control:null, buzzState:'idle', myBuzzTs:null, peerBuzzTs:null, lastResult:null };
+      window.og = og;
+    }
+    render();
+  };
+  dc.onclose = ()=>{ net.status='lost'; render(); };
+  dc.onmessage = (ev)=>{
+    let msg; try{ msg = JSON.parse(ev.data); } catch(e){ return; }
+    handleNetMessage(msg);
+  };
+}
+function handleNetMessage(msg){
+  if(!og && msg.t!=='hello') return;
+  switch(msg.t){
+    case 'hello':
+      og.peerName = msg.name; og.order = msg.order; og.count = msg.count;
+      sendMsg({t:'helloAck', name:net.myName});
+      resetForQuestion(0);
+      break;
+    case 'helloAck':
+      og.peerName = msg.name;
+      resetForQuestion(0);
+      break;
+    case 'buzz':
+      onPeerBuzz(msg.ts);
+      break;
+    case 'boardUpdate':
+      onBoardUpdate(msg);
+      break;
+    case 'next':
+      resetForQuestion(msg.idx);
+      break;
+    case 'bye':
+      net.status='lost';
+      render();
+      break;
+  }
+}
+
+/* ---------------- host flow ---------------- */
+async function hostCreateGame(){
+  net.busy = true; net.errorMsg='';
+  go('onlineHostCode', {});
+  try{
+    pc = newPC();
+    dc = pc.createDataChannel('game', {ordered:true});
+    setupDataChannelHandlers();
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    await waitIceComplete(pc);
+    net.myCode = encodeCode(pc.localDescription);
+  } catch(err){
+    net.errorMsg = 'Could not start connection on this device/browser.';
+  }
+  net.busy = false;
+  render();
+}
+async function hostAcceptAnswer(){
+  const val = document.getElementById('answerCodeInput').value.trim();
+  if(!val){ return; }
+  try{
+    const desc = decodeCode(val);
+    await pc.setRemoteDescription(desc);
+    net.status='connecting';
+    render();
+  } catch(err){
+    net.errorMsg = 'That code did not work. Ask them to resend it.';
+    render();
+  }
+}
+
+/* ---------------- joiner flow ---------------- */
+function joinShowPasteScreen(){
+  go('onlineJoinCode', {});
+}
+async function joinSubmitOfferCode(){
+  const val = document.getElementById('offerCodeInput').value.trim();
+  if(!val) return;
+  net.busy = true; net.errorMsg=''; render();
+  try{
+    pc = newPC();
+    pc.ondatachannel = (ev)=>{ dc = ev.channel; setupDataChannelHandlers(); };
+    const offerDesc = decodeCode(val);
+    await pc.setRemoteDescription(offerDesc);
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+    await waitIceComplete(pc);
+    net.myCode = encodeCode(pc.localDescription);
+    net.status='waitingHost';
+  } catch(err){
+    net.errorMsg = 'That code did not look right. Double check and try again.';
+  }
+  net.busy = false;
+  render();
+}
+
+/* ---------------- copy / share helpers ---------------- */
+function copyCode(){
+  const el = document.getElementById('codeOutput');
+  if(!el) return;
+  el.select ? el.select() : null;
+  navigator.clipboard && navigator.clipboard.writeText(net.myCode).then(()=>{
+    const btn = document.getElementById('copyBtn');
+    if(btn){ const old=btn.textContent; btn.textContent='Copied!'; setTimeout(()=>btn.textContent=old,1200); }
+  }).catch(()=>{});
+}
+function shareCode(){
+  if(navigator.share){
+    navigator.share({title:'Naija Feud connection code', text:net.myCode}).catch(()=>{});
+  } else {
+    copyCode();
+  }
+}
+
+/* ---------------- gameplay: buzz ---------------- */
+function pressBuzz(){
+  if(!og || og.phase!=='buzzing' || og.buzzState!=='idle') return;
+  og.buzzState='pendingMine';
+  og.myBuzzTs = Date.now();
+  sendMsg({t:'buzz', ts:og.myBuzzTs});
+  render();
+  setTimeout(()=>resolveBuzz(), 320);
+}
+function onPeerBuzz(ts){
+  if(!og || og.phase!=='buzzing') return;
+  og.peerBuzzTs = ts;
+  if(og.buzzState==='idle'){
+    og.buzzState='pendingPeer';
+    render();
+    setTimeout(()=>resolveBuzz(), 320);
+  } else if(og.buzzState==='pendingMine'){
+    resolveBuzz();
+  }
+}
+function resolveBuzz(){
+  if(!og || og.phase!=='buzzing' || og.buzzState==='resolved') return;
+  if(og.myBuzzTs==null && og.peerBuzzTs==null) return;
+  let winner;
+  if(og.myBuzzTs!=null && og.peerBuzzTs!=null){
+    winner = og.myBuzzTs===og.peerBuzzTs ? (og.role==='host'?'me':'peer') : (og.myBuzzTs<og.peerBuzzTs?'me':'peer');
+  } else {
+    winner = og.myBuzzTs!=null ? 'me' : 'peer';
+  }
+  og.buzzState='resolved';
+  og.phase='guessing';
+  og.control=winner;
+  render();
+}
+
+/* ---------------- gameplay: guessing ---------------- */
+function submitOnlineGuess(){
+  if(!og || og.control!=='me') return;
+  const input = document.getElementById('guessInput');
+  const text = input.value.trim();
+  if(!text) return;
+  input.value='';
+  const qObj = QUESTIONS[og.order[og.qi]];
+  const idx = findMatchIndex(text, qObj.a, og.revealed);
+  og.lastResult = { text, correct: idx>=0, by:'me' };
+  applyLocalResult(qObj, idx);
+}
+function applyLocalResult(qObj, idx){
+  let deltaAmount=0, deltaTo=null;
+  if(og.phase==='steal'){
+    if(idx>=0){
+      let total=0; qObj.a.forEach((a,i)=>{ if(!og.revealed[i]) total+=a.p; });
+      og.revealed = og.revealed.map(()=>true);
+      deltaAmount=total; deltaTo='me';
+      og.scores.me += total;
+    }
+    og.phase='resolved';
+  } else {
+    if(idx>=0){
+      og.revealed[idx]=true;
+      deltaAmount = qObj.a[idx].p; deltaTo='me';
+      og.scores.me += deltaAmount;
+      og.phase = og.revealed.every(Boolean) ? 'resolved' : 'guessing';
+    } else {
+      og.strikes++;
+      if(og.strikes>=3){
+        og.control = flip(og.control);
+        og.phase='steal';
+      } else {
+        og.phase='guessing';
+      }
+    }
+  }
+  sendMsg({t:'boardUpdate', revealed:og.revealed, strikes:og.strikes, phase:og.phase, control:og.control,
+           deltaAmount, deltaTo, lastResult: og.lastResult});
+  if(og.phase==='resolved'){ scheduleAutoAdvance(); }
+  else { render(); }
+}
+function onBoardUpdate(msg){
+  og.revealed = msg.revealed.slice();
+  og.strikes = msg.strikes;
+  og.phase = msg.phase;
+  og.control = flip(msg.control);
+  if(msg.deltaTo) og.scores[flip(msg.deltaTo)] += msg.deltaAmount;
+  if(msg.lastResult) og.lastResult = Object.assign({}, msg.lastResult, {by:'peer'});
+  render();
+}
+function scheduleAutoAdvance(){
+  render();
+  setTimeout(()=>{
+    const nextIdx = og.qi+1;
+    sendMsg({t:'next', idx:nextIdx});
+    resetForQuestion(nextIdx);
+  }, 3000);
+}
+function resetForQuestion(idx){
+  if(idx >= og.order.length){
+    go('onlineEnd', {});
+    return;
+  }
+  og.qi=idx; og.revealed=[false,false,false,false,false]; og.strikes=0; og.phase='buzzing';
+  og.control=null; og.buzzState='idle'; og.myBuzzTs=null; og.peerBuzzTs=null; og.lastResult=null;
+  go('onlineGame', {});
+}
+function leaveOnlineGame(){
+  if(!confirm('Leave the game?')) return;
+  sendMsg({t:'bye'});
+  teardownConnection();
+  go('home');
+}
+function teardownConnection(){
+  try{ if(dc) dc.close(); }catch(e){}
+  try{ if(pc) pc.close(); }catch(e){}
+  dc=null; pc=null; og=null;
+  window.og = og;
+  net = { role:null, myName:net.myName, peerName:'', status:'idle', errorMsg:'', myCode:'', busy:false, count:20 };
+  window.net = net;
+}
+
+
+/* ============================================================
+   ONLINE MODE — screens
+   ============================================================ */
+function onlineSetupScreen(){
+  const name = net.myName || '';
+  const count = net.count || 20;
+  return `
+  <div class="screen active">
+    <div class="stripe-band"></div>
+    <div class="container">
+      <button class="back-link" data-act="go" data-to="home">&larr; Back</button>
+      <div class="wordmark" style="padding-top:6px;">
+        <h1 style="font-size:26px;">Two-Player Online</h1>
+        <p style="font-size:11px;">Direct phone-to-phone &middot; no server, no app store</p>
+      </div>
+
+      <div class="card stack">
+        <div>
+          <label class="field-label">Your Name</label>
+          <input type="text" id="nameInput" value="${escapeAttr(name)}" maxlength="16" placeholder="e.g. Tayo">
+        </div>
+        <div>
+          <label class="field-label">Number of Questions (host picks)</label>
+          <div class="btn-row">
+            ${[10,20,30].map(n=>`<button class="btn ${count===n?'btn-primary':'btn-outline'} btn-sm" data-act="setOnlineCount" data-n="${n}">${n}</button>`).join('')}
+          </div>
+        </div>
+      </div>
+
+      <div class="stack" style="margin-top:16px;">
+        <button class="btn btn-primary" data-act="startHost">Create Game (I'll Host)</button>
+        <button class="btn btn-outline" data-act="startJoin">Join a Friend's Game</button>
+      </div>
+      <p class="muted center-text" style="margin-top:16px;">One person taps <b>Create Game</b> and sends the code that appears to the other player. They tap <b>Join a Friend's Game</b> and paste it in. Works over WiFi or mobile data — keep both phones online until you're connected.</p>
+    </div>
+  </div>`;
+}
+function setOnlineCount(n){
+  const nameEl = document.getElementById('nameInput');
+  if(nameEl) net.myName = nameEl.value;
+  net.count = n;
+  render();
+}
+function startHostFlow(){
+  const nameEl = document.getElementById('nameInput');
+  net.myName = (nameEl && nameEl.value.trim()) || 'Host';
+  net.role = 'host';
+  hostCreateGame();
+}
+function startJoinFlow(){
+  const nameEl = document.getElementById('nameInput');
+  net.myName = (nameEl && nameEl.value.trim()) || 'Player 2';
+  net.role = 'joiner';
+  joinShowPasteScreen();
+}
+
+/* ---------------- host code screen ---------------- */
+function onlineHostCodeScreen(){
+  return `
+  <div class="screen active">
+    <div class="stripe-band"></div>
+    <div class="container">
+      <button class="back-link" data-act="leaveSetup">&larr; Cancel</button>
+      <div class="wordmark" style="padding-top:6px;"><h1 style="font-size:24px;">Step 1 &middot; Send This Code</h1></div>
+
+      ${net.errorMsg ? `<div class="status-banner danger">${escapeHtml(net.errorMsg)}</div>` : ''}
+
+      ${!net.myCode ? `
+        <div class="card center-text"><div class="spinner"></div><p class="muted" style="margin-top:12px;">Generating your connection code&hellip;</p></div>
+      ` : `
+        <div class="card">
+          <p class="eyebrow">Your code — send this to ${escapeHtml('your friend')}</p>
+          <div class="code-box" id="codeOutput">${net.myCode}</div>
+          <div class="btn-row" style="margin-top:12px;">
+            <button class="btn btn-gold btn-sm" id="copyBtn" data-act="copyCode">Copy Code</button>
+            <button class="btn btn-outline btn-sm" data-act="shareCode">Share&hellip;</button>
+          </div>
+        </div>
+
+        <div class="divider">Then</div>
+
+        <div class="card">
+          <p class="eyebrow">Step 2 &middot; Paste their reply code</p>
+          <p class="muted" style="margin:0 0 10px;">They'll join, get a second code back, and send it to you. Paste it below.</p>
+          <textarea id="answerCodeInput" placeholder="Paste your friend's code here"></textarea>
+          <button class="btn btn-primary" style="margin-top:12px;" data-act="hostAcceptAnswer">Connect</button>
+        </div>
+      `}
+
+      ${net.status==='connecting' ? `<div class="card center-text" style="margin-top:14px;"><div class="spinner"></div><p class="muted" style="margin-top:12px;">Connecting&hellip;</p></div>` : ''}
+      ${net.status==='connected' ? `<div class="card center-text" style="margin-top:14px;"><div class="spinner"></div><p class="muted" style="margin-top:12px;">Linking up the game&hellip;</p></div>` : ''}
+      ${net.status==='lost' ? `<div class="status-banner danger" style="margin-top:14px;">Connection lost. Go back and try again.</div>` : ''}
+    </div>
+  </div>`;
+}
+
+/* ---------------- joiner code screen ---------------- */
+function onlineJoinCodeScreen(){
+  return `
+  <div class="screen active">
+    <div class="stripe-band"></div>
+    <div class="container">
+      <button class="back-link" data-act="leaveSetup">&larr; Cancel</button>
+      <div class="wordmark" style="padding-top:6px;"><h1 style="font-size:24px;">Join Game</h1></div>
+
+      ${net.errorMsg ? `<div class="status-banner danger">${escapeHtml(net.errorMsg)}</div>` : ''}
+
+      ${!net.myCode ? `
+        <div class="card">
+          <p class="eyebrow">Paste the code your friend sent you</p>
+          <textarea id="offerCodeInput" placeholder="Paste code here"></textarea>
+          <button class="btn btn-primary" style="margin-top:12px;" data-act="joinSubmitOfferCode" ${net.busy?'disabled':''}>${net.busy?'Working…':'Continue'}</button>
+        </div>
+      ` : `
+        <div class="card">
+          <p class="eyebrow">Send this code back to them</p>
+          <div class="code-box" id="codeOutput">${net.myCode}</div>
+          <div class="btn-row" style="margin-top:12px;">
+            <button class="btn btn-gold btn-sm" id="copyBtn" data-act="copyCode">Copy Code</button>
+            <button class="btn btn-outline btn-sm" data-act="shareCode">Share&hellip;</button>
+          </div>
+        </div>
+        <div class="card center-text" style="margin-top:14px;">
+          <div class="spinner"></div>
+          <p class="muted" style="margin-top:12px;">Waiting for them to connect&hellip;</p>
+        </div>
+      `}
+      ${net.status==='lost' ? `<div class="status-banner danger" style="margin-top:14px;">Connection lost. Go back and try again.</div>` : ''}
+    </div>
+  </div>`;
+}
+function leaveSetup(){
+  teardownConnection();
+  go('onlineSetup');
+}
+
+/* ============================================================
+   ONLINE MODE — gameplay screen
+   ============================================================ */
+function onlineGameScreen(){
+  if(!og) return `<div class="screen active"><div class="container center-text"><div class="spinner" style="margin-top:60px;"></div></div></div>`;
+  if(og.phase==='lobby'){
+    return `<div class="screen active"><div class="stripe-band"></div><div class="container center-text">
+      <div class="wordmark"><h1 style="font-size:24px;">Connected!</h1></div>
+      <div class="spinner"></div><p class="muted" style="margin-top:12px;">Getting the board ready&hellip;</p>
+    </div></div>`;
+  }
+
+  const qObj = QUESTIONS[og.order[og.qi]];
+  const myScore = og.scores.me, peerScore = og.scores.peer;
+  const leadingMe = myScore>peerScore, leadingPeer = peerScore>myScore;
+
+  let banner = '';
+  if(og.phase==='buzzing'){
+    if(og.buzzState==='idle') banner = `<div class="status-banner">First to buzz gets to guess!</div>`;
+    else if(og.buzzState==='pendingMine') banner = `<div class="status-banner">Buzzing in&hellip;</div>`;
+    else if(og.buzzState==='pendingPeer') banner = `<div class="status-banner">${escapeHtml(og.peerName)} buzzed &mdash; confirming&hellip;</div>`;
+  } else if(og.phase==='guessing'){
+    banner = og.control==='me'
+      ? `<div class="status-banner win">Your turn &mdash; type a guess below</div>`
+      : `<div class="status-banner">${escapeHtml(og.peerName)} is guessing&hellip;</div>`;
+  } else if(og.phase==='steal'){
+    banner = og.control==='me'
+      ? `<div class="status-banner danger">Steal chance! One guess for it all</div>`
+      : `<div class="status-banner danger">${escapeHtml(og.peerName)} has a steal chance</div>`;
+  } else if(og.phase==='resolved'){
+    banner = `<div class="status-banner win">Next question coming up&hellip;</div>`;
+  }
+
+  let resultLine = '';
+  if(og.lastResult){
+    const who = og.lastResult.by==='me' ? 'You' : escapeHtml(og.peerName);
+    resultLine = `<p class="muted center-text" style="margin:6px 0 0;">${who} guessed &ldquo;${escapeHtml(og.lastResult.text)}&rdquo; &mdash; ${og.lastResult.correct?'correct!':'not on the board.'}</p>`;
+  }
+
+  return `
+  <div class="screen active">
+    <div class="stripe-band"></div>
+    <div class="container">
+      <div class="top-bar">
+        <button class="back-link" data-act="leaveOnlineGame">&larr; Leave</button>
+        <span class="qcount">Q ${og.qi+1} / ${og.order.length}</span>
+      </div>
+
+      <div class="scoreboard">
+        <div class="score-card ${leadingMe?'leading':''} ${og.control==='me'?'active-control':''}">
+          <div class="team-name">You</div>
+          <div class="team-score">${myScore}</div>
+        </div>
+        <div class="score-card ${leadingPeer?'leading':''} ${og.control==='peer'?'active-control':''}">
+          <div class="team-name">${escapeHtml(og.peerName||'Opponent')}</div>
+          <div class="team-score">${peerScore}</div>
+        </div>
+      </div>
+
+      ${banner}
+
+      <div class="board-wrap">
+        <div class="question-text">${escapeHtml(qObj.q)}</div>
+        <div class="slots">
+          ${qObj.a.map((ans,i)=>`
+            <div class="slot ${og.revealed[i]?'revealed':'hidden'}">
+              <div class="slot-inner">
+                <div class="slot-num">${i+1}</div>
+                <div class="slot-text">${escapeHtml(ans.t)}</div>
+                <div class="slot-placeholder">?</div>
+                <div class="slot-points">${ans.p}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        <div class="strikes">
+          ${[0,1,2].map(i=>`<svg class="strike-x ${og.strikes>i?'active':''}" viewBox="0 0 44 44"><path d="M8 8 L36 36 M36 8 L8 36" stroke="#C1432E" stroke-width="7" stroke-linecap="round" fill="none"/></svg>`).join('')}
+        </div>
+      </div>
+      ${resultLine}
+
+      <div class="stack" style="margin-top:16px;">
+        ${onlineControls()}
+      </div>
+    </div>
+  </div>`;
+}
+function onlineControls(){
+  if(og.phase==='buzzing'){
+    const locked = og.buzzState!=='idle';
+    return `<button class="btn btn-red" style="padding:26px; font-size:22px;" data-act="pressBuzz" ${locked?'disabled':''}>BUZZ IN</button>`;
+  }
+  if((og.phase==='guessing' || og.phase==='steal') && og.control==='me'){
+    return `<div class="guess-row">
+      <input type="text" id="guessInput" placeholder="Type your guess" autofocus>
+      <button class="btn btn-primary btn-sm" data-act="submitOnlineGuess">Guess</button>
+    </div>`;
+  }
+  if((og.phase==='guessing' || og.phase==='steal') && og.control==='peer'){
+    return `<p class="muted center-text">Waiting for ${escapeHtml(og.peerName)}&hellip;</p>`;
+  }
+  return '';
+}
+
+/* ---------------- online end screen ---------------- */
+function onlineEndScreen(){
+  if(!og) return homeScreen();
+  const myScore = og.scores.me, peerScore = og.scores.peer;
+  const winner = myScore===peerScore ? null : (myScore>peerScore ? 'You' : (og.peerName||'Opponent'));
+  setTimeout(fireConfetti, 100);
+  return `
+  <div class="screen active">
+    <div class="stripe-band"></div>
+    <div class="container center-text">
+      <div class="wordmark"><h1 style="font-size:30px;">Game Over</h1></div>
+      <div class="card" style="margin-top:10px;">
+        ${winner ? `<p class="pill" style="margin-bottom:10px;">Winner</p><h2 class="display" style="margin:0 0 16px; color:var(--green-dk);">${escapeHtml(winner)}</h2>` : `<h2 class="display" style="margin:0 0 16px;">It's a Tie!</h2>`}
+        <div class="scoreboard">
+          <div class="score-card ${myScore>=peerScore?'leading':''}"><div class="team-name">You</div><div class="team-score">${myScore}</div></div>
+          <div class="score-card ${peerScore>=myScore?'leading':''}"><div class="team-name">${escapeHtml(og.peerName||'Opponent')}</div><div class="team-score">${peerScore}</div></div>
+        </div>
+      </div>
+      <div class="stack" style="margin-top:20px;">
+        <button class="btn btn-primary" data-act="endOnlineToMenu">Main Menu</button>
+      </div>
+    </div>
+  </div>`;
+}
+function endOnlineToMenu(){
+  sendMsg({t:'bye'});
+  teardownConnection();
+  go('home');
+}
+
+/* ============================================================
+   ROUTER TABLE + EVENT DELEGATION + BOOTSTRAP
+   ============================================================ */
+const SCREENS = {
+  home: homeScreen,
+  localSetup: localSetupScreen,
+  localGame: localGameScreen,
+  localEnd: localEndScreen,
+  onlineSetup: onlineSetupScreen,
+  onlineHostCode: onlineHostCodeScreen,
+  onlineJoinCode: onlineJoinCodeScreen,
+  onlineGame: onlineGameScreen,
+  onlineEnd: onlineEndScreen
+};
+
+const ACTIONS = {
+  go: (ds)=> go(ds.to),
+  setLocalCount: (ds)=> setLocalCount(Number(ds.n)),
+  startLocal: ()=> startLocal(),
+  assignControl: (ds)=> assignControl(ds.team),
+  revealSlot: (ds)=> revealSlot(Number(ds.i)),
+  markStrike: ()=> markStrike(),
+  stealFail: ()=> stealFail(),
+  nextLocalQuestion: ()=> nextLocalQuestion(),
+  confirmExitLocal: ()=> confirmExitLocal(),
+  setOnlineCount: (ds)=> setOnlineCount(Number(ds.n)),
+  startHost: ()=> startHostFlow(),
+  startJoin: ()=> startJoinFlow(),
+  leaveSetup: ()=> leaveSetup(),
+  hostAcceptAnswer: ()=> hostAcceptAnswer(),
+  joinSubmitOfferCode: ()=> joinSubmitOfferCode(),
+  copyCode: ()=> copyCode(),
+  shareCode: ()=> shareCode(),
+  pressBuzz: ()=> pressBuzz(),
+  submitOnlineGuess: ()=> submitOnlineGuess(),
+  leaveOnlineGame: ()=> leaveOnlineGame(),
+  endOnlineToMenu: ()=> endOnlineToMenu()
+};
+
+document.addEventListener('click', function(e){
+  const el = e.target.closest('[data-act]');
+  if(!el) return;
+  const act = el.dataset.act;
+  if(ACTIONS[act]) ACTIONS[act](el.dataset);
+});
+document.addEventListener('keydown', function(e){
+  if(e.key==='Enter'){
+    if(e.target.id==='answerCodeInput'){ e.preventDefault(); hostAcceptAnswer(); }
+    if(e.target.id==='offerCodeInput'){ e.preventDefault(); joinSubmitOfferCode(); }
+    if(e.target.id==='guessInput'){ e.preventDefault(); submitOnlineGuess(); }
+  }
+});
+
+go('home');
+
+</script>
+</body>
+</html>
