@@ -367,9 +367,55 @@ textarea{resize:vertical; min-height:90px; font-family:monospace; font-size:12px
   .slot.revealed .slot-inner{transition:none;}
   .confetti-piece{animation:none; display:none;}
 }
+/* ---------- QR code + scanner ---------- */
+.qr-wrap{
+  display:flex;
+  justify-content:center;
+  padding:14px 0 4px;
+}
+.qr-wrap svg{
+  width:180px;
+  height:180px;
+  background:#fff;
+  border-radius:10px;
+  padding:8px;
+}
+.qr-fallback{
+  text-align:center;
+  font-size:12px;
+  opacity:.6;
+  padding:8px 0;
+}
+.scan-overlay{
+  position:fixed; inset:0;
+  background:rgba(10,20,14,.94);
+  z-index:80;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+.scan-overlay video{
+  width:min(320px,86vw);
+  height:min(320px,86vw);
+  object-fit:cover;
+  border-radius:16px;
+  border:3px solid var(--gold);
+}
+.scan-overlay p{
+  color:#fff;
+  margin:16px 0;
+  font-size:14px;
+  opacity:.85;
+  text-align:center;
+}
+.scan-overlay .btn{max-width:220px;}
 </style>
 </head>
 <body>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 
 <div id="app"></div>
 
@@ -790,6 +836,74 @@ function decodeCode(code){
   const json = decodeURIComponent(escape(atob(code.trim())));
   return JSON.parse(json);
 }
+
+/* ---------------- QR: generate ---------------- */
+function qrSvgFor(text){
+  if(!text || typeof qrcode==='undefined') return '';
+  try{
+    const qr = qrcode(0, 'L'); // type 0 = auto-size, L = most data capacity
+    qr.addData(text);
+    qr.make();
+    return qr.createSvgTag({cellSize:4, margin:2});
+  } catch(err){
+    return ''; // code too long for a single QR — UI falls back to copy/paste
+  }
+}
+
+/* ---------------- QR: scan ---------------- */
+let scanStream = null, scanRAF = null;
+function openQrScanner(onResult){
+  if(typeof jsQR==='undefined'){ alert('QR scanning is not available on this browser — please use Copy/Paste instead.'); return; }
+  const overlay = document.createElement('div');
+  overlay.className = 'scan-overlay';
+  overlay.id = 'scanOverlay';
+  overlay.innerHTML = `
+    <p>Point your camera at the other device's QR code</p>
+    <video id="scanVideo" playsinline autoplay muted></video>
+    <button class="btn btn-outline btn-sm" style="margin-top:18px;" id="scanCancelBtn">Cancel</button>
+  `;
+  document.body.appendChild(overlay);
+  document.getElementById('scanCancelBtn').addEventListener('click', closeQrScanner);
+
+  const video = document.getElementById('scanVideo');
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+
+  navigator.mediaDevices.getUserMedia({ video: { facingMode:'environment' } })
+    .then(stream=>{
+      scanStream = stream;
+      video.srcObject = stream;
+      video.play();
+      const tick = ()=>{
+        if(!scanStream) return;
+        if(video.readyState === video.HAVE_ENOUGH_DATA){
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const code = jsQR(imgData.data, imgData.width, imgData.height);
+          if(code && code.data){
+            const result = code.data;
+            closeQrScanner();
+            onResult(result);
+            return;
+          }
+        }
+        scanRAF = requestAnimationFrame(tick);
+      };
+      scanRAF = requestAnimationFrame(tick);
+    })
+    .catch(()=>{
+      overlay.querySelector('p').textContent = 'Could not access the camera. Check permissions, or use Copy/Paste instead.';
+    });
+}
+function closeQrScanner(){
+  if(scanRAF) cancelAnimationFrame(scanRAF);
+  scanRAF = null;
+  if(scanStream){ scanStream.getTracks().forEach(t=>t.stop()); scanStream = null; }
+  const overlay = document.getElementById('scanOverlay');
+  if(overlay) overlay.remove();
+}
 function sendMsg(obj){
   if(dc && dc.readyState==='open') dc.send(JSON.stringify(obj));
 }
@@ -912,6 +1026,22 @@ async function joinSubmitOfferCode(){
   }
   net.busy = false;
   render();
+}
+
+/* ---------------- QR-triggered flows ---------------- */
+function scanForJoinerOffer(){
+  openQrScanner((text)=>{
+    const el = document.getElementById('offerCodeInput');
+    if(el) el.value = text;
+    joinSubmitOfferCode();
+  });
+}
+function scanForHostAnswer(){
+  openQrScanner((text)=>{
+    const el = document.getElementById('answerCodeInput');
+    if(el) el.value = text;
+    hostAcceptAnswer();
+  });
 }
 
 /* ---------------- copy / share helpers ---------------- */
@@ -1123,7 +1253,9 @@ function onlineHostCodeScreen(){
         <div class="card center-text"><div class="spinner"></div><p class="muted" style="margin-top:12px;">Generating your connection code&hellip;</p></div>
       ` : `
         <div class="card">
-          <p class="eyebrow">Your code — send this to ${escapeHtml('your friend')}</p>
+          <p class="eyebrow">Have them scan this code</p>
+          ${qrSvgFor(net.myCode) ? `<div class="qr-wrap">${qrSvgFor(net.myCode)}</div>` : `<p class="qr-fallback">QR unavailable for this connection — use Copy Code below.</p>`}
+          <p class="muted" style="margin:0 0 10px;">Or send this code — send this to ${escapeHtml('your friend')}</p>
           <div class="code-box" id="codeOutput">${net.myCode}</div>
           <div class="btn-row" style="margin-top:12px;">
             <button class="btn btn-gold btn-sm" id="copyBtn" data-act="copyCode">Copy Code</button>
@@ -1134,9 +1266,10 @@ function onlineHostCodeScreen(){
         <div class="divider">Then</div>
 
         <div class="card">
-          <p class="eyebrow">Step 2 &middot; Paste their reply code</p>
-          <p class="muted" style="margin:0 0 10px;">They'll join, get a second code back, and send it to you. Paste it below.</p>
-          <textarea id="answerCodeInput" placeholder="Paste your friend's code here"></textarea>
+          <p class="eyebrow">Step 2 &middot; Get their reply code</p>
+          <p class="muted" style="margin:0 0 10px;">They'll join and get a second code — scan it from their screen, or paste it below.</p>
+          <button class="btn btn-gold" style="margin-bottom:12px;" data-act="scanForHostAnswer">Scan Their QR</button>
+          <textarea id="answerCodeInput" placeholder="...or paste their code here"></textarea>
           <button class="btn btn-primary" style="margin-top:12px;" data-act="hostAcceptAnswer">Connect</button>
         </div>
       `}
@@ -1161,13 +1294,17 @@ function onlineJoinCodeScreen(){
 
       ${!net.myCode ? `
         <div class="card">
-          <p class="eyebrow">Paste the code your friend sent you</p>
+          <p class="eyebrow">Scan their QR code</p>
+          <button class="btn btn-gold" style="margin-bottom:12px;" data-act="scanForJoinerOffer">Scan QR</button>
+          <p class="muted" style="margin:4px 0 10px;">...or paste the code they sent you</p>
           <textarea id="offerCodeInput" placeholder="Paste code here"></textarea>
           <button class="btn btn-primary" style="margin-top:12px;" data-act="joinSubmitOfferCode" ${net.busy?'disabled':''}>${net.busy?'Working…':'Continue'}</button>
         </div>
       ` : `
         <div class="card">
-          <p class="eyebrow">Send this code back to them</p>
+          <p class="eyebrow">Have them scan this to finish connecting</p>
+          ${qrSvgFor(net.myCode) ? `<div class="qr-wrap">${qrSvgFor(net.myCode)}</div>` : `<p class="qr-fallback">QR unavailable for this connection — use Copy Code below.</p>`}
+          <p class="muted" style="margin:0 0 10px;">Or send this code back to them</p>
           <div class="code-box" id="codeOutput">${net.myCode}</div>
           <div class="btn-row" style="margin-top:12px;">
             <button class="btn btn-gold btn-sm" id="copyBtn" data-act="copyCode">Copy Code</button>
@@ -1353,6 +1490,8 @@ const ACTIONS = {
   leaveSetup: ()=> leaveSetup(),
   hostAcceptAnswer: ()=> hostAcceptAnswer(),
   joinSubmitOfferCode: ()=> joinSubmitOfferCode(),
+  scanForJoinerOffer: ()=> scanForJoinerOffer(),
+  scanForHostAnswer: ()=> scanForHostAnswer(),
   copyCode: ()=> copyCode(),
   shareCode: ()=> shareCode(),
   pressBuzz: ()=> pressBuzz(),
